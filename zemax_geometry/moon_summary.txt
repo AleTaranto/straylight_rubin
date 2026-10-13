@@ -1,0 +1,65 @@
+==============================================================================
+'MOON' ARTIFACT -- SUMMARY
+==============================================================================
+
+Analysis frame
+  label epoch starts      : 20250511  (first moon label; earlier nights carry no label for it and are excluded)
+  frame                   : 92983 exposures on 200 inspected nights
+  moon exposures          : 19  (0.020 %)
+  distinct nights / runs  : 4 nights, 5 contiguous runs (median 2, max 12)
+  distinct target fields  : 2   distinct pointings (1 deg): 6
+  depth tier              : D  (nights with >=8 labels: 1; nights with both classes: 4)
+
+  busiest nights          : 20250511:12, 20250806:3, 20250906:3, 20250905:1
+
+The effective sample size is the night count, not the exposure count: 19
+labels arrive in 5 runs on 4 nights, so exposures are nowhere near
+independent. Every test below is night-aware for that reason.
+
+------------------------------------------------------------------------------
+1. BRIGHT-STAR ANNULUS TEST  (the primary question)
+------------------------------------------------------------------------------
+
+Question: is there always a bright star at some preferred off-axis distance
+from the boresight when this artifact appears? Statistic: the number of
+distinct NIGHTS on which at least one labelled exposure has a star in a given
+annulus. Counting nights rather than exposures is what stops a single burst
+from being read as hundreds of detections. The null circularly shifts each
+night's label vector, which preserves run lengths and spacings, so the null
+samples are exactly as bursty as the real one. The reported p is family-wise
+over the whole scan: each cell is standardised, and the maximum z is
+calibrated against the per-replicate maximum, so picking the best of 8795
+cells costs what it should.
+
+The scan covers brightness as well as radius. One magnitude cut will not do:
+taking every star down to V=4.5 means that at 20 deg off axis almost every
+exposure has one, so the indicator saturates and any real contrast is diluted
+away. Brightness is also the physically right axis, since scattered flux
+scales with the flux of the source.
+
+NOT TESTED -- tier D -- 19 labels on 4 nights is too few for any inferential test (4 available, 5 required)
+
+  Descriptive facts instead of statistics:
+    labels per night      : 20250511:12, 20250806:3, 20250906:3, 20250905:1
+    largest single night  : 20250511 holds 12 of 19 labels (63 %)
+    effective sample size : ~4 nights
+
+    moon_sep            : median 21.3, range 17.4 to 71.1
+    moon_alt            : median 79.9, range 60.9 to 85.7
+    altitude            : median 74.5, range 29.8 to 79.9
+    azimuth             : median 244.4, range 41.8 to 258.9
+
+
+==============================================================================
+VERDICT: UNDERPOWERED
+==============================================================================
+
+Too few independent nights to tell. This means 'cannot tell', NOT 'no effect'.
+
+  criteria not met:
+    - tier D: 19 labels on 4 nights
+
+  Power statement: no annulus-by-brightness cell had enough support to test at
+all (19 labels on 4 nights). No effect size is excluded by this result -- the
+data cannot address the question either way.
+

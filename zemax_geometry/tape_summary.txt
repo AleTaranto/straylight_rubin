@@ -1,0 +1,256 @@
+==============================================================================
+'TAPE' ARTIFACT -- SUMMARY
+==============================================================================
+
+Analysis frame
+  label epoch starts      : 20250417  (first tape label; earlier nights carry no label for it and are excluded)
+  frame                   : 100235 exposures on 219 inspected nights
+  tape exposures          : 8593  (8.573 %)
+  distinct nights / runs  : 173 nights, 2024 contiguous runs (median 1, max 106)
+  distinct target fields  : 68   distinct pointings (1 deg): 2101
+  depth tier              : A  (nights with >=8 labels: 152; nights with both classes: 173)
+
+  busiest nights          : 20250828:320, 20250827:316, 20250826:290, 20260224:220, 20250519:193
+
+The effective sample size is the night count, not the exposure count: 8593
+labels arrive in 2024 runs on 173 nights, so exposures are nowhere near
+independent. Every test below is night-aware for that reason.
+
+------------------------------------------------------------------------------
+1. BRIGHT-STAR ANNULUS TEST  (the primary question)
+------------------------------------------------------------------------------
+
+Question: is there always a bright star at some preferred off-axis distance
+from the boresight when this artifact appears? Statistic: the number of
+distinct NIGHTS on which at least one labelled exposure has a star in a given
+annulus. Counting nights rather than exposures is what stops a single burst
+from being read as hundreds of detections. The null circularly shifts each
+night's label vector, which preserves run lengths and spacings, so the null
+samples are exactly as bursty as the real one. The reported p is family-wise
+over the whole scan: each cell is standardised, and the maximum z is
+calibrated against the per-replicate maximum, so picking the best of 8795
+cells costs what it should.
+
+The scan covers brightness as well as radius. One magnitude cut will not do:
+taking every star down to V=4.5 means that at 20 deg off axis almost every
+exposure has one, so the indicator saturates and any real contrast is diluted
+away. Brightness is also the physically right axis, since scattered flux
+scales with the flux of the source.
+
+  grid                    : 8795 cells (1759 annuli, widths 0.05/0.10/0.25/0.50 deg over 0.5-25 deg x 5 brightness tiers)
+  permutations            : 2000
+
+  BEST CELL               : [20.800, 20.850) deg  (width 0.05 deg)  with a star brighter than V = 2.0
+  nights with in-annulus labels : 64   (null expects 30.27 +/- 4.03)
+  recurrence z            : 8.37
+
+  Two nulls, and the WEAKER (larger) p is the one quoted:
+    within-night shift  p = 0.0005   (labels moved inside their own night)
+    cross-night shuffle p = 0.0050   (whole nights transplanted)
+  p (family-wise, conservative)       : 0.0050
+  cells with enough support to test   : 7421 of 8795
+    (a cell needs >=3 nights with labels and >=30 exposures: without
+     that floor the scan is won by a cell holding a handful of exposures,
+     where the null is ~0 and a coincidence produces a huge meaningless z)
+
+  Why two nulls: shifting labels within a night cannot see that the
+  labelled nights are themselves a biased sample of pointings -- a night
+  spent on one field has every exposure near the same stars, so every
+  shift lands in the same annuli. Checked directly, that null alone gives
+  p ~ 0.01 to labels deliberately decoupled from the sky. Transplanting
+  whole nights breaks the link while keeping the bursts, so it catches
+  what the shift cannot.
+
+  Exposure-level view of the same annulus (SUPPORTING ONLY -- a burst
+  of N flagged exposures counts N times here, so treat it as a
+  description, not as evidence):
+    exposures in annulus  : 830   labelled: 220
+    rate inside           : 26.506 %
+    rate outside          : 8.4231 %
+    crude lift            : 3.1x
+    share of labels inside: 2.6 %
+
+  Radial profile around the winner (same width, V < 2.0):
+    annulus (deg)      exposures  labelled    rate   nights
+    [20.500,20.550)        757       180  23.778 %     50
+    [20.550,20.600)        665        93  13.985 %     43
+    [20.600,20.650)        677        76  11.226 %     41
+    [20.650,20.700)        734        75  10.218 %     40
+    [20.700,20.750)        690        67   9.710 %     40
+    [20.750,20.800)        653       104  15.926 %     41
+    [20.800,20.850)        830       220  26.506 %     64   <- winner
+    [20.850,20.900)        716       147  20.531 %     46
+    [20.900,20.950)        701       114  16.262 %     52
+    [20.950,21.000)        783       158  20.179 %     54
+    [21.000,21.050)        821       138  16.809 %     49
+    [21.050,21.100)       1184       199  16.807 %     60
+    [21.100,21.150)        887       229  25.817 %     59
+    A sharp drop either side is a mechanism edge; a broad bump is
+    more consistent with scattering off a large structure.
+
+  Which stars produce the in-annulus labels:
+    31 distinct stars; top contributor 20Eps Sgr with 56 pairs on 4 nights (22 % of all in-annulus labels)
+      20Eps Sgr      pairs   56  nights   4  share  22.0 %
+      24Alp PsA      pairs   49  nights  10  share  19.3 %
+      Alp1Cru        pairs   24  nights   2  share   9.4 %
+      Alp2Cru        pairs   24  nights   2  share   9.4 %
+      Alp1Cen        pairs    9  nights   5  share   3.5 %
+      Alp Car        pairs    9  nights   9  share   3.5 %
+
+  Leave-one-star-out (drop the top contributor and re-test):
+    z 8.03   p 0.0050   nights 61
+    A signal that vanishes here was one coincidence, not a mechanism.
+
+  Offset-annulus negative controls (same width, displaced):
+    A real mechanism has a sharp edge, so neighbours should be much weaker.
+    winner [20.800,20.850)  rate 26.506 %
+    offset -0.15  [20.650,20.700)  n   734  labelled   75  rate  10.218 %
+    offset -0.10  [20.700,20.750)  n   690  labelled   67  rate   9.710 %
+    offset -0.05  [20.750,20.800)  n   653  labelled  104  rate  15.926 %
+    offset +0.05  [20.850,20.900)  n   716  labelled  147  rate  20.531 %
+    offset +0.10  [20.900,20.950)  n   701  labelled  114  rate  16.262 %
+    offset +0.15  [20.950,21.000)  n   783  labelled  158  rate  20.179 %
+    strongest neighbour / winner = 0.77
+
+  Magnitude dose-response on the winning annulus:
+    A real optical mechanism should worsen with brighter stars and
+    switch off past its own magnitude limit.
+    V in [-2.0,+0.0)  n    133  labelled    25  rate  18.797 %
+    V in [+0.0,+1.0)  n    125  labelled    19  rate  15.200 %
+    V in [+1.0,+2.0)  n    572  labelled   176  rate  30.769 %
+    V in [+2.0,+3.0)  n   2033  labelled   238  rate  11.707 %
+    V in [+3.0,+4.5)  n  10212  labelled   783  rate   7.667 %
+    no star in annulus     n  87160  rate   8.435 %
+
+    Cochran-Armitage trend  z -15.45  p 0.0000   (negative z = rate falls as stars get fainter)
+    bright half / faint half rate ratio: 1.8x
+    dose-response satisfied: False
+    (bin-to-bin ordering is not strictly monotone; the brightest bins hold
+     only a few exposures -- there are four stars with V<0 in the whole sky --
+     so their ordering is noise. The trend test and the bright/faint ratio are
+     what carry the evidence.)
+    (exposure-level: supporting evidence, not the verdict)
+
+------------------------------------------------------------------------------
+2. WHICH FRAME IS THE FEATURE FIXED IN?
+------------------------------------------------------------------------------
+
+A stray-light feature is fixed in some frame, and each implicates a different
+surface: the camera frame means the optics (a ghost), the dome frame means the
+structure or the slit, the sky frame means the atmosphere -- or, far more
+often, that the survey kept revisiting one field.
+
+  stars per exposure in the winning annulus: mean 1.15, exactly one in 85 % of cases
+
+This is why the frame cannot be identified from telemetry: with about one star
+per exposure there is a single direction, and the three frames are then
+related by fixed offsets (rotator, parallactic angle). Two stars at the same
+radius differ in position angle by a rotator-invariant constant, so they
+rotate together and add no discriminating power either. The concentrations
+below are therefore DESCRIPTIVE; read their ordering, not their absolute size.
+
+    frame     R(labels)  R(controls)   excess   mean direction
+    camera        0.070        0.101   -0.030   60 deg
+    horizon       0.116        0.090    0.026   100 deg
+    sky           0.250        0.191    0.059   315 deg
+
+  'excess' is R(labels) - R(controls): each frame compared against its
+  own baseline, which is the only fair comparison since the frames have
+  different intrinsic concentrations.
+
+  The sky frame shows the larger excess. The star direction repeats on the SKY
+more than in the camera, which is what repeatedly visiting the same field
+produces -- not what a camera-fixed ghost produces. Pointing repetition is the
+more economical explanation.
+
+------------------------------------------------------------------------------
+3. UNIVARIATE SCREEN  (what else differs)
+------------------------------------------------------------------------------
+
+  Cliff's delta: probability a random labelled exposure exceeds a
+  random unlabelled one, rescaled to (-1,+1). Ranked by |delta|;
+  p-values ignore night clustering and so are optimistic.
+
+    sky_noise_median           [image qualit] d=-0.316  median 41.63 vs 52.90  q=0.00
+    sky_bg_median              [image qualit] d=-0.290  median 1538.52 vs 2443.93  q=0.00
+    zero_point_median          [image qualit] d=+0.278  median 31.99 vs 31.94  q=0.00
+    dec                        [pointing    ] d=-0.252  median -39.06 vs -24.09  q=0.00
+    tape_vmag                  [stars       ] d=-0.241  median -0.01 vs 0.12  q=0.00
+    star1_vmag                 [stars       ] d=-0.226  median 0.46 vs 0.46  q=0.00
+    moon_bright                [moon        ] d=-0.220  median 0.00 vs 0.02  q=0.00
+    ra                         [pointing    ] d=-0.210  median 108.77 vs 187.53  q=0.00
+    star0_vmag                 [stars       ] d=-0.199  median -0.72 vs -0.04  q=0.00
+    mount_jitter_rms           [telescope   ] d=-0.186  median 0.01 vs 0.01  q=0.00
+    focus_z                    [pointing    ] d=+0.185  median -1.82 vs -2.10  q=0.00
+    moon_alt                   [moon        ] d=-0.182  median -14.56 vs 3.56  q=0.00
+    moon_dalt                  [moon        ] d=-0.181  median -73.58 vs -55.83  q=0.00
+    mount_motion_image_degradation [telescope   ] d=-0.180  median 0.00 vs 0.00  q=0.00
+
+------------------------------------------------------------------------------
+4. TELESCOPE POSITION AND STATE
+------------------------------------------------------------------------------
+
+  Odds ratios stratified by night (SUPPORTING ONLY -- exposure-level,
+  so a burst inflates the precision; compare crude vs stratified to
+  see how much of the crude effect was just which nights we observed):
+
+    Moon illum > 0.9                 OR    1.55 (1.01-2.36)  p 0.0442   [crude 0.41]
+    Moon within 90 deg of dome az    OR    1.21 (1.15-1.28)  p 0.0000   [crude 1.34]
+    telescope above 65 deg           OR    1.13 (1.07-1.20)  p 0.0000   [crude 0.88]
+    Moon closer than 50 deg          OR    0.93 (0.84-1.04)  p 0.1917   [crude 0.40]
+    mount jitter above median        OR    0.81 (0.77-0.86)  p 0.0000   [crude 0.57]
+    |dome-tel az| > 4 deg            OR    0.78 (0.73-0.83)  p 0.0000   [crude 0.58]
+    telescope az in N quadrant       OR    0.73 (0.68-0.79)  p 0.0000   [crude 0.49]
+    Moon above horizon               OR    0.67 (0.63-0.71)  p 0.0000   [crude 0.48]
+    dome shutter not fully open      OR    0.11 (0.03-0.35)  p 0.0002   [crude 0.48]
+
+  NOT TESTED -- no night contains both states of these conditions, so a night-stratified odds ratio does not exist for them: mirror covers off stow
+
+  Cannot be tested within a night (night-level quantities -- for these,
+  between-night evidence is all there is, which is a real limit):
+    moon_illum, mirror_cover_max, dome_shutter_min, mount_jitter_rms, mount_jitter_rms_az, mount_jitter_rms_el, mount_jitter_rms_rot, mount_motion_image_degradation, sky_noise_median, astrom_offset_mean_median
+
+  Moon gate: 34.8 % of tape labels have
+    the Moon above the horizon (vs 52.5 % of the rest)
+    rate with Moon up 5.854 %   Moon down 11.401 %
+
+------------------------------------------------------------------------------
+5. WITHIN-NIGHT MODELS
+------------------------------------------------------------------------------
+
+  Night fixed-effects logit, cluster-robust by night. Only
+  within-night variation contributes, so anything constant over
+  a night is absent by necessity.
+
+    Moon separation / 10deg    OR   0.959 (0.893-1.029)  p 0.2428
+    Moon altitude / 10deg      OR   0.958 (0.900-1.020)  p 0.1833
+    telescope altitude / 10deg OR   1.112 (1.012-1.221)  p 0.0275
+    nearest bright star sep / 10deg OR   0.831 (0.675-1.023)  p 0.0809
+    |dome-tel az| / 10deg      OR   0.939 (0.883-0.999)  p 0.0462
+
+  Geometry-only classifier, nights never shared between train
+  and test: ROC AUC 0.793 +/- 0.016, average precision 0.3049 vs 0.0857 chance (3.6x lift).
+  This is a specificity check, not a detector: it shows whether
+  the geometry carries signal that transfers to unseen nights.
+
+
+==============================================================================
+VERDICT: STRONG ASSOCIATION
+==============================================================================
+
+The star geometry is associated with this artifact beyond what burstiness
+explains, but not every mechanism criterion is met.
+
+  criteria met:
+    + p_FWER <= 0.05
+    + BH q <= 0.10
+    + recurrence z >= 3
+    + >= 8 nights with in-annulus labels
+    + >= 20 labelled exposures in the annulus
+    + >= 3 stars
+    + no single star supplies >50 % of the in-annulus labels
+    + leave-one-star-out p <= 0.10
+  criteria not met:
+    - magnitude dose-response (downward trend p <= 0.05 and bright stars >2x the faint rate)
+    - offset controls < 20 % of the excess
+

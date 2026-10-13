@@ -1,0 +1,185 @@
+==============================================================================
+STRAY-LIGHT ARTIFACTS -- CROSS-ARTIFACT SUMMARY
+==============================================================================
+generated 2026-09-29 22:36 UTC
+labels: data/raw/stray_light_20260506.csv    frame: 100235 on-sky exposures on 219 inspected nights
+
+READ THIS FIRST. The question behind this analysis was whether each artifact
+type always has a bright star at some specific off-axis distance from the
+boresight. The short answer is that the naive way of asking -- compare the
+artifact rate inside a candidate annulus with the rate outside -- gives badly
+misleading answers here, and most of the apparently strong results it produces
+are not real.
+
+The reason is burstiness. Artifact labels arrive in runs of consecutive
+exposures on a handful of nights, and the survey revisits the same fields, so
+whichever annulus that night's field happens to populate will look enriched.
+Measured against a null that reproduces the burst structure, the largest
+'lift' the scan finds by chance alone is already between 1.5x and 5.8x
+depending on the artifact. So a 4x enrichment is not evidence of anything --
+it is the typical value of the null.
+
+------------------------------------------------------------------------------
+VERDICTS, ranked by strength of evidence
+------------------------------------------------------------------------------
+
+artifact   verdict               T      n nights   best annulus stars<       z   p_FWER    q_BH    lift nstar
+horseshoe  MECHANISM IDENTIFIED  B    105     48    [2.00,2.05)  V<2.0   42.77   0.0050   0.017   308.6     9
+tape       STRONG ASSOCIATION    A   8593    173  [20.80,20.85)  V<2.0    8.37   0.0050   0.017     3.1    31
+smudge     CONFOUNDED            B    223     13  [20.00,20.50)  V<0.0    7.54   0.0050   0.017     6.2     3
+sail       CONFOUNDED            A    704     61  [20.45,20.50)  V<0.0    6.21   0.0149     n/a     5.6     3  <- sub-label of tape
+airplane   CONFOUNDED            C     70     47  [16.40,16.50)  V<1.0    4.93   0.0846   0.211    11.5     3
+nibble     CONFOUNDED            B    121     13    [2.23,2.27)  V<4.5    2.33   0.9830   0.983     3.9     4
+shoe       NULL                  B    174     24  [16.50,16.75)  V<1.0    4.67   0.2537   0.507     2.2     3
+banana     NULL                  A    844     38    [6.95,7.00)  V<2.0    3.87   0.7164   0.896     2.6     3
+pillow     NULL                  A    303     40    [7.53,7.58)  V<3.0    3.66   0.5567   0.896     2.8     8
+arc        NULL                  A    993     38  [23.27,23.32)  V<4.5    3.49   0.6322   0.896     1.0    85
+ghoul      NULL                  A    524     16  [16.65,16.70)  V<2.0    3.06   0.8557   0.951     2.0     2
+moon       UNDERPOWERED          D     19      4              -      -     n/a      n/a     n/a     n/a     0
+lighton    UNDERPOWERED          D     20      2              -      -     n/a      n/a     n/a     n/a     0
+
+Columns: z is how far the number of distinct nights showing a star in the best
+annulus exceeds the burst-preserving null. p_FWER is corrected for searching
+all 8795 annulus-by-brightness cells. q_BH corrects across artifacts. 'lift'
+is the crude exposure-level ratio -- shown only so it can be compared with z,
+because where the two disagree the lift is the one that is wrong.
+
+------------------------------------------------------------------------------
+MOST PROBABLE CAUSE, ARTIFACT BY ARTIFACT
+------------------------------------------------------------------------------
+
+HORSESHOE  (MECHANISM IDENTIFIED, tier B, 105 labels on 48 nights)
+  see horseshoe_summary.txt for the full working
+  Cause: a bright star at 2.00-2.05 deg off axis. The association appears on
+  17 separate nights and 9 different stars, survives removing its top-
+  contributing star, and dies away in displaced control annuli -- a sharp
+  edge, which is what a baffle or a lens edge produces.
+  This independently reproduces the L3 lens-baffle model already implemented
+  in L3_baffle/horseshoe_detailer.py, which forbids stars in [1.995, 2.025]
+  deg. Recovering it from the labels alone is also the positive control for
+  this whole analysis: the method rediscovers the one mechanism that was
+  known in advance.
+
+TAPE  (STRONG ASSOCIATION, tier A, 8593 labels on 173 nights)
+  see tape_summary.txt for the full working
+  Cause: a bright star (V < 2.0) at 20.80-20.85 deg off axis is associated
+  with this artifact beyond what burstiness explains. It appears on 64
+  separate nights and 31 different stars, with 220 labelled exposures inside
+  the annulus.
+  Short of 'mechanism identified' because not every corroborating criterion
+  is met -- see the criteria list in the per-artifact file for exactly
+  which.
+  Worth noting: this distance falls inside the 19.5-22 deg annulus already
+  hard-coded into the CSV's own tape_* columns, which pick the brightest V<1
+  star in exactly that range. So the data carries a pre-existing hypothesis
+  about tape, and this analysis independently supports it from the labels
+  alone.
+  But read the shape before reading the peak: the night-level excess is a
+  broad symmetric bump roughly 19-22 deg wide rather than a sharp step. A
+  baffle or lens edge gives a hard edge; a broad bump is more consistent
+  with scattering off a large structure. So the distance is real, and the
+  single best bin is not to be over-read.
+
+SMUDGE  (CONFOUNDED, tier B, 223 labels on 13 nights)
+  see smudge_summary.txt for the full working
+  There is an enrichment at 20.00-20.50 deg (6.2x, p = 0.0050) that does
+  clear the null, but it rests on too little independent support to be
+  called a mechanism:
+    only 11 labelled exposures fall in the annulus; only 6 distinct nights;
+  one star (9Alp CMa) supplies 82 % of them.
+  That pattern -- one star, a few consecutive nights -- is what the survey
+  revisiting a single field produces, not what an optical mechanism
+  produces. A mechanism would show up on many different stars.
+  The star direction repeats on the sky more than in the camera, confirming
+  pointing repetition rather than a camera-fixed ghost.
+  Most probable cause: not identified from geometry.
+
+SAIL  (CONFOUNDED, tier A, 704 labels on 61 nights)
+  see sail_summary.txt for the full working
+  There is an enrichment at 20.45-20.50 deg (5.6x, p = 0.0149) that does
+  clear the null, but it rests on too little independent support to be
+  called a mechanism:
+    only 3 labelled exposures fall in the annulus; only 3 distinct nights.
+  Most probable cause: not identified from geometry.
+
+AIRPLANE  (CONFOUNDED, tier C, 70 labels on 47 nights)
+  see airplane_summary.txt for the full working
+  The apparent enrichment at 16.40-16.50 deg (11.5x) does not survive the
+  burst-preserving null (p = 0.085).
+  Most probable cause: not identified from geometry.
+
+NIBBLE  (CONFOUNDED, tier B, 121 labels on 13 nights)
+  see nibble_summary.txt for the full working
+  The apparent enrichment at 2.23-2.27 deg (3.9x) does not survive the
+  burst-preserving null (p = 0.983).
+  Most probable cause: not identified from geometry.
+
+SHOE  (NULL, tier B, 174 labels on 24 nights)
+  see shoe_summary.txt for the full working
+  No bright-star geometry predicts this artifact once burstiness is
+  respected. Whatever drives it is not a star at a fixed off-axis distance.
+
+BANANA  (NULL, tier A, 844 labels on 38 nights)
+  see banana_summary.txt for the full working
+  No bright-star geometry predicts this artifact once burstiness is
+  respected. Whatever drives it is not a star at a fixed off-axis distance.
+
+PILLOW  (NULL, tier A, 303 labels on 40 nights)
+  see pillow_summary.txt for the full working
+  No bright-star geometry predicts this artifact once burstiness is
+  respected. Whatever drives it is not a star at a fixed off-axis distance.
+  Separately, 94 % of these labels occur with the Moon above the horizon, so
+  the Moon gates this artifact whatever the star geometry does.
+
+ARC  (NULL, tier A, 993 labels on 38 nights)
+  see arc_summary.txt for the full working
+  No bright-star geometry predicts this artifact once burstiness is
+  respected. Whatever drives it is not a star at a fixed off-axis distance.
+  Separately, 99 % of these labels occur with the Moon above the horizon, so
+  the Moon gates this artifact whatever the star geometry does.
+
+GHOUL  (NULL, tier A, 524 labels on 16 nights)
+  see ghoul_summary.txt for the full working
+  No bright-star geometry predicts this artifact once burstiness is
+  respected. Whatever drives it is not a star at a fixed off-axis distance.
+
+MOON  (UNDERPOWERED, tier D, 19 labels on 4 nights)
+  see moon_summary.txt for the full working
+  Cannot tell: 19 labels on 4 nights. This is a statement about power, not a
+  null result.
+  The apparent star-annulus signal here cannot be separated from the Moon's
+  own position at this sample size, and the artifact is named after the
+  Moon, so the Moon is the obvious candidate.
+
+LIGHTON  (UNDERPOWERED, tier D, 20 labels on 2 nights)
+  see lighton_summary.txt for the full working
+  Cannot tell: 20 labels on 2 nights. This is a statement about power, not a
+  null result.
+  Almost every label falls in one run on a single night, so the effective
+  sample size is about 2 events -- consistent with a one-off illumination
+  event (a light left on) rather than anything geometric.
+
+------------------------------------------------------------------------------
+WHAT THE TELEMETRY CANNOT SETTLE
+------------------------------------------------------------------------------
+
+Which surface scatters the light. A feature fixed in the camera frame
+implicates the optics, one fixed in the dome frame the structure, one fixed on
+the sky the atmosphere. Separating those needs the source direction measured
+in each frame, and this dataset provides only about one bright star per
+exposure inside any candidate annulus. With a single direction the three
+frames differ by fixed offsets, and two stars at the same radius rotate
+together, so no amount of additional telemetry of this kind breaks the
+degeneracy. Answering it needs the artifact's own orientation measured in the
+pixels.
+
+Label completeness. Artifacts are found by human inspection, so every rate
+here is a rate of labelling. The burst structure is consistent with real
+events and also with inspection attention.
+
+What the artifact names mean physically. Apart from 'horseshoe' (L3 lens
+baffle reflection, documented in L3_baffle/horseshoe_detailer.py) and 'tape'
+(scattered light, test LVV-T956-a), no physical definition of these names is
+recorded anywhere in this repository. The causes named above are inferred from
+geometry alone.
+

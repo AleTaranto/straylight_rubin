@@ -1,0 +1,78 @@
+# import lsst.daf.butler as dafButler
+from lsst.summit.utils.utils import getCameraFromInstrumentName
+import os
+import numpy as np
+
+from tqdm import tqdm
+import gc
+# import mpi4py
+from astropy.coordinates import EarthLocation, SkyCoord, AltAz 
+from astropy import units as u
+from lsst.summit.utils import ConsDbClient
+
+# --- project bootstrap: common/ holds the shared modules ---
+import sys, pathlib
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "common"))
+# -----------------------------------------------------------
+import geom_utils as gu
+vscode= True
+from mpi4py import MPI
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+
+if vscode == True:
+    URL = "https://usdf-rsp.slac.stanford.edu/consdb" #for vscode 
+    tk = os.environ["CONSDB_TOKEN"]  # set in .env (see README)
+    cdb_client = ConsDbClient(URL,token=tk)
+else:
+    URL = "http://consdb-pq.consdb:8080/consdb"  
+    os.environ["no_proxy"] += ",.consdb"
+    cdb_client = ConsDbClient(URL,token=tk)
+
+visit=None
+
+camera = getCameraFromInstrumentName("LSSTCam")
+
+visits_query = f'''
+    SELECT exposure_id
+    FROM cdb_lsstcam.exposure
+'''
+visitAll = cdb_client.query(visits_query).to_pandas().dropna()
+visitAll = visitAll[visitAll['exposure_id'] > 2025050100000]
+
+my_visit = visitAll['exposure_id'][rank::comm.Get_size()]
+butler1 = dafButler.Butler("embargo", collections=["LSSTCam/runs/nightlyValidation", "LSSTCam/raw/all"], instrument="LSSTCam")  # type: ignore
+butler2 = dafButler.Butler("main", collections=["LSSTCam/raw/all", "u/ataranto/general_outputs"], instrument="LSSTCam") # type: ignore
+
+max_dist = 2.4 * u.deg
+limit = 2
+with open(f"../data/visit_lists/brush_query-v3.txt", "a", encoding="utf-8") as f:
+
+ for visit in tqdm(my_visit, position=rank):
+    lista=[]
+    # visit+=1
+    if int(visit) > 2026050000000:
+        butler=butler1
+        # print(f"Using embargo butler for visit {visit}")
+    else:
+        butler=butler2
+        # print(f"Using main butler for visit {visit}")
+
+    gc.collect()
+    try:
+        pos=butler.get("raw.visitInfo", exposure=visit, detector=94).boresightRaDec
+        center = SkyCoord(ra=pos.getRa().asDegrees(), dec=pos.getDec().asDegrees(), unit=(u.deg, u.deg), frame='icrs')
+        brightest_stars = gu.find_bright_stars(center, max_dist, sorting='Radial_Distance', mag_filter_dict={"Vmag": "<3"}, limit=limit)
+        if brightest_stars is not None:
+            if len(brightest_stars) > 0 and brightest_stars["Radial_Distance"][0] > 1.6:
+    #    if cond1 and cond2:
+     	        #   lista.append(visit)
+                    f.write(f"{visit}, \n") #, {brightest_stars['Vmag'].iloc[0]}\n")
+            if len(brightest_stars) >1 and brightest_stars["Radial_Distance"][1] > 1.6:
+                    f.write(f"{visit}, \n") 
+
+
+            # continue
+    except Exception as e:
+        # print(f"Error processing visit {visit}=== {e}")
+        continue
