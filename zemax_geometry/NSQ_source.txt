@@ -1,0 +1,195 @@
+! ============================================================
+! ADD_FIELD_SOURCE.ZPL
+! Crea una nuova Source Ellipse in Non-Sequential Mode
+!
+! INPUT:
+!   field_deg = Field off-axis [deg]
+!   clock_deg = Clock angle [deg]
+!
+! OUTPUT:
+!   X, Y, Z, Tilt X, Tilt Y, Tilt Z
+!   X Half Radius, Y 
+! CONVENZIONI:Half Radius
+!
+!   Z      = -9000
+!   Tilt Z = -180 deg
+!
+! ENTRANCE PUPIL:
+!   EPD = 8400 mm
+!
+! X/Y HALF RADIUS:
+!   Calcolati come proiezione sul piano XY globale
+!   di una pupilla circolare di diametro 8400 mm,
+!   inclinata di field_deg e orientata secondo clock_deg.
+! ============================================================
+
+
+! ------------------------------------------------------------
+! INPUT UTENTE
+! ------------------------------------------------------------
+
+INPUT "Enter Field Off-Axis [deg]", field_deg
+INPUT "Enter Clock Angle [deg]", clock_deg
+
+
+! ------------------------------------------------------------
+! COSTANTI
+! ------------------------------------------------------------
+
+z_pos = -9000
+tilt_z = -180
+
+epd = 8400
+pupil_radius = epd / 2
+
+
+! ------------------------------------------------------------
+! PI GRECO
+! ------------------------------------------------------------
+
+pi = 2 * ACOS(0)
+
+
+! ------------------------------------------------------------
+! CONVERSIONE ANGOLI IN RADIANTI
+!
+! SINE() e COSI() lavorano in radianti.
+! ------------------------------------------------------------
+
+field_rad = field_deg * pi / 180
+clock_rad = clock_deg * pi / 180
+
+
+! ------------------------------------------------------------
+! CALCOLO DELLA POSIZIONE
+!
+! tan(field) = sin(field) / cos(field)
+! ------------------------------------------------------------
+
+radius = ABSO(z_pos) * SINE(field_rad) / COSI(field_rad)
+
+x_pos = -radius * COSI(clock_rad)
+y_pos = -radius * SINE(clock_rad)
+
+
+! ------------------------------------------------------------
+! CALCOLO DEI TILT
+! ------------------------------------------------------------
+
+tilt_x = -field_deg * SINE(clock_rad)
+tilt_y =  field_deg * COSI(clock_rad)
+
+
+! ------------------------------------------------------------
+! CALCOLO X/Y HALF RADIUS
+!
+! La pupilla è circolare con:
+!
+!   Radius = 4200 mm
+!
+! La proiezione sul piano XY globale è un'ellisse.
+!
+! X Half Radius:
+!
+!   R * sqrt(
+!       sin(C)^2 +
+!       cos(F)^2 * cos(C)^2
+!   )
+!
+! Y Half Radius:
+!
+!   R * sqrt(
+!       cos(C)^2 +
+!       cos(F)^2 * sin(C)^2
+!   )
+!
+! Per field = 0:
+!   X Half Radius = 4200 mm
+!   Y Half Radius = 4200 mm
+!
+! Per clock = 0:
+!   X Half Radius = 4200 mm
+!   Y Half Radius = 4200*cos(field)
+!
+! Per clock = 90:
+!   X Half Radius = 4200*cos(field)
+!   Y Half Radius = 4200 mm
+! ------------------------------------------------------------
+
+x_half_radius = pupil_radius * SQRT(SINE(clock_rad)*SINE(clock_rad)+ COSI(field_rad)*COSI(field_rad) * COSI(clock_rad)* COSI(clock_rad) )
+
+y_half_radius = pupil_radius * SQRT(COSI(clock_rad)*COSI(clock_rad)+ COSI(field_rad)*COSI(field_rad) * SINE(clock_rad)*SINE(clock_rad) )
+
+
+! ------------------------------------------------------------
+! AGGIUNGI NUOVO OGGETTO NSC
+! ------------------------------------------------------------
+
+new_object = NOBJ(1) + 1
+
+INSERTOBJECT 1, new_object
+
+
+! ------------------------------------------------------------
+! IMPOSTA IL TIPO DI OGGETTO
+!
+! Source Ellipse
+! ------------------------------------------------------------
+
+SETNSCPROPERTY 1, new_object, 0, 0, "NSC_SRCE"
+
+
+! ------------------------------------------------------------
+! IMPOSTA POSIZIONE E ROTAZIONE
+!
+! 1 = X
+! 2 = Y
+! 3 = Z
+! 4 = Tilt X
+! 5 = Tilt Y
+! 6 = Tilt Z
+! ------------------------------------------------------------
+
+SETNSCPOSITION 1, new_object, 1, x_pos
+SETNSCPOSITION 1, new_object, 2, y_pos
+SETNSCPOSITION 1, new_object, 3, z_pos
+
+SETNSCPOSITION 1, new_object, 4, tilt_x
+SETNSCPOSITION 1, new_object, 5, tilt_y
+SETNSCPOSITION 1, new_object, 6, tilt_z
+
+
+! ------------------------------------------------------------
+! IMPOSTA I PARAMETRI DELLA SOURCE ELLIPSE
+!
+! Parameter 6 = X Half Radius
+! Parameter 7 = Y Half Radius
+! ------------------------------------------------------------
+
+SETNSCPARAMETER 1, new_object, 6, x_half_radius
+SETNSCPARAMETER 1, new_object, 7, y_half_radius
+
+! ------------------------------------------------------------
+! STAMPA RISULTATI
+! ------------------------------------------------------------
+
+FORMAT 4.3
+
+PRINT "----------------------------------------"
+PRINT "New Source Ellipse created"
+PRINT "Object number = ", new_object
+PRINT "EPD [mm]      = ", epd
+PRINT "Pupil Radius  = ", pupil_radius
+PRINT "Field [deg]   = ", field_deg
+PRINT "Clock [deg]   = ", clock_deg
+PRINT "X             = ", x_pos
+PRINT "Y             = ", y_pos
+PRINT "Z             = ", z_pos
+PRINT "Tilt X        = ", tilt_x
+PRINT "Tilt Y        = ", tilt_y
+PRINT "Tilt Z        = ", tilt_z
+PRINT "X Half Radius = ", x_half_radius
+PRINT "Y Half Radius = ", y_half_radius
+PRINT "----------------------------------------"
+
+END
